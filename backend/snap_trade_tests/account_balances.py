@@ -1,5 +1,12 @@
 from pprint import pprint
-from snap_trade import snaptrade
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.utils.snap_trade import snaptrade
 
 response = snaptrade.account_information.get_user_account_balance(
     account_id="207f2627-489c-4dca-ba43-55530dd8c9f1",

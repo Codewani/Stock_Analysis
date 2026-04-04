@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
-from models.users import Base
-from ulrs.user import router
+from models.auth.user import Base
+from ulrs.auth.user import router as auth_router
+from ulrs.snap_trade import router as snap_trade_router
 from database import engine
 
 load_dotenv()
@@ -18,7 +19,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(snap_trade_router)
 
 @app.get("/")
 def read_root():

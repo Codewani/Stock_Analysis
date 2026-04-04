@@ -1,4 +1,3 @@
-
 from snaptrade_client import SnapTrade
 import os
 from dotenv import load_dotenv

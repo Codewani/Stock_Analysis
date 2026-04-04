@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from main import app
-from models.users import Base
-from ulrs.user import get_db
+from backend.models.auth import Base
+from backend.ulrs.auth.user import get_db
 
 # Set testing environment
 os.environ["TESTING"] = "1"

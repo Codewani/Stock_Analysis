@@ -7,12 +7,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from backend.utils.snap_trade import snaptrade
-DAYS = 365
 
-response = snaptrade.account_information.get_user_account_orders(
-    account_id="c44b086f-e931-4b04-9af1-eaba4a4bc134",
+response = snaptrade.account_information.list_user_accounts(
     user_id="kondwani_123",
-    user_secret="8a8545e1-284b-4433-990f-0cdaccaeec17",
-    days=DAYS
+    user_secret="8a8545e1-284b-4433-990f-0cdaccaeec17"
 )
 pprint(response.body)

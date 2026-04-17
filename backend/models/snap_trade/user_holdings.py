@@ -23,5 +23,5 @@ class UserHolding(Base):
     user = relationship("User", back_populates="user_holdings")
 
     __table_args__ = (
-        UniqueConstraint('user_id', 'account_id', name='uq_user_holding'),
+        UniqueConstraint('user_id', 'account_id', 'symbol', name='uq_user_holding'),
     )

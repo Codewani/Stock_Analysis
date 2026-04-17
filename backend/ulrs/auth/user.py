@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from models.auth.user import *
-from models.auth.token import *
+from models.auth.token import Token, TokenData
+from models.auth.user import Credential, User, UserInDB, UserSecret
 from database import SessionLocal
 from utils.snap_trade import snaptrade
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -12,16 +14,14 @@ from typing import Annotated
 import jwt
 from jwt.exceptions import InvalidTokenError
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-change-me")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 class UserCreate(BaseModel):
     user_id: str
@@ -44,8 +44,13 @@ def get_db():
 
 @router.post("/register", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if email already exists
-    db_user = db.query(User).filter(User.email == user.email).first()
+    existing_user = db.query(User).filter(
+        (User.email == user.email) | (User.user_id == user.user_id)
+    ).first()
+    if existing_user:
+        if existing_user.email == user.email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="User ID already registered")
 
     snap_trade_response = snaptrade.authentication.register_snap_trade_user(
         user_id=user.user_id
@@ -53,8 +58,6 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     
     if snap_trade_response.status != 200:
         raise HTTPException(status_code=400, detail="Failed to register with SnapTrade")
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
     
     user_secret = snap_trade_response.body['userSecret']
 
@@ -66,39 +69,35 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         phone_number=user.phone_number
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    # Hash password and create credential
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = get_password_hash(user.password)
     new_credential = Credential(
         user_id=new_user.user_id,
         password_hash=hashed_password
     )
-    db.add(new_credential)
-    db.commit()
 
     new_user_secret = UserSecret(
         user_id=new_user.user_id,
         snap_trade_secret=user_secret
     )
 
-    db.add(new_user_secret)
-    db.commit()
+    db.add_all([new_user, new_credential, new_user_secret])
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create user")
+
+    db.refresh(new_user)
 
     return UserResponse(user_id=new_user.user_id, message="User registered successfully")
 
 
-password_hash = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-
-
 def verify_password(plain_password, hashed_password):
-    return password_hash.verify(plain_password, hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password):
-    return password_hash.hash(password)
+    return pwd_context.hash(password)
 
 
 def get_user(db: Session, user_identifier: str):

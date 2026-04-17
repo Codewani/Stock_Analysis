@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 from pprint import pprint
 from typing import Any
@@ -63,6 +64,18 @@ def create_robinhood_connection(client: TestClient, token: str) -> dict[str, Any
     return response.json()
 
 
+def create_account_balance_snapshot(client: TestClient, token: str) -> dict[str, Any]:
+    response = client.post(
+        "/snap_trade/accounts/balances/snapshots",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Account balance snapshot request failed ({response.status_code}): {response.text}"
+        )
+    return response.json()
+
+
 def main() -> None:
     client = TestClient(app)
     payload = {
@@ -102,6 +115,13 @@ def main() -> None:
         print(portal_response["url"])
     else:
         print("Response did not include an obvious redirect URL. Inspect the printed body above.")
+
+    print("Waiting 2 minutes before creating an account balance snapshot...")
+    time.sleep(70)
+
+    print("Creating an account balance snapshot through the API endpoint...")
+    snapshot_response = create_account_balance_snapshot(client, access_token)
+    pprint(snapshot_response)
 
 
 if __name__ == "__main__":

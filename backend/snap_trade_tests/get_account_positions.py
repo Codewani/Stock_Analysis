@@ -8,8 +8,9 @@ if str(ROOT) not in sys.path:
 
 from backend.utils.snap_trade import snaptrade
 
-response = snaptrade.account_information.list_user_accounts(
+response = snaptrade.account_information.get_user_account_positions(
+    account_id="c44b086f-e931-4b04-9af1-eaba4a4bc134",
     user_id="kondwani_123",
-    user_secret="ea67c4be-8033-41e0-a3e6-2241e73bf762"
+    user_secret="8a8545e1-284b-4433-990f-0cdaccaeec17"
 )
 pprint(response.body)

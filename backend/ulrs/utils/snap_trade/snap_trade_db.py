@@ -1,6 +1,3 @@
-'''
-TODO: add all snap_trade database helper functions
-'''
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 

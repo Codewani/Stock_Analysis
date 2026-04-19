@@ -16,27 +16,6 @@ from jwt.exceptions import InvalidTokenError
 from backend.ulrs.utils.db.db_utils import get_db
 from backend.ulrs.utils.auth.user import *
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-router = APIRouter()
-
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-change-me")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-
-class UserCreate(BaseModel):
-    user_id: str
-    first_name: str
-    last_name: str
-    email: str
-    phone_number: str
-    password: str
-
-class UserResponse(BaseModel):
-    user_id: str
-    message: str
-
 @router.post("/register", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(

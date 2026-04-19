@@ -4,9 +4,34 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from backend.models.auth.user import Credential, User, UserInDB
 from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+from pydantic import BaseModel
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+router = APIRouter()
+
+class UserCreate(BaseModel):
+    user_id: str
+    first_name: str
+    last_name: str
+    email: str
+    phone_number: str
+    password: str
+
+class UserResponse(BaseModel):
+    user_id: str
+    message: str
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-change-me")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

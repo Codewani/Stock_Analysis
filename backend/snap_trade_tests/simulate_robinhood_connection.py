@@ -66,7 +66,7 @@ def create_robinhood_connection(client: TestClient, token: str) -> dict[str, Any
 
 def create_account_balance_snapshot(client: TestClient, token: str) -> dict[str, Any]:
     response = client.post(
-        "/snap_trade/accounts/balances/snapshots",
+        "/snap_trade/data/accounts/update",
         headers={"Authorization": f"Bearer {token}"},
     )
     if response.status_code != 200:

@@ -4,15 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from models.auth.token import Token, TokenData
-from models.auth.user import Credential, User, UserInDB, UserSecret
-from database import SessionLocal
-from utils.snap_trade import snaptrade
+from backend.models.auth.token import Token, TokenData
+from backend.models.auth.user import Credential, User, UserInDB, UserSecret
+from backend.database import SessionLocal
+from backend.utils.snap_trade import snaptrade
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 import jwt
 from jwt.exceptions import InvalidTokenError
+from backend.ulrs.utils.db.db_utils import get_db
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -34,13 +35,6 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     user_id: str
     message: str
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/register", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):

@@ -15,6 +15,7 @@ class User(Base):
     credentials = relationship("Credential", back_populates="user", uselist=False)
     user_secrets = relationship("UserSecret", back_populates="user", uselist=False)
     account_balance_snapshots = relationship("AccountBalanceSnapshot", back_populates="user")
+    user_holdings = relationship("UserHolding", back_populates="user")
 
 class Credential(Base):
     __tablename__ = "credentials"

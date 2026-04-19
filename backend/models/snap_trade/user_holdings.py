@@ -6,7 +6,7 @@ from sqlalchemy import Column, String, DECIMAL, TIMESTAMP, func, ForeignKey, Uni
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from models.auth.user import Base
+from backend.models.auth.user import Base
 
 class UserHolding(Base):
     __tablename__ = "user_holdings"
@@ -14,6 +14,7 @@ class UserHolding(Base):
     holding_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(String(255), ForeignKey("users.user_id"), nullable=False)
     account_id = Column(String(255), nullable=False)
+    average_purchase_price = Column(DECIMAL(18, 4), nullable=False)
     symbol = Column(String(255), nullable=False)
     units = Column(DECIMAL(18, 4), nullable=False)
     open_pnl = Column(DECIMAL(18, 4), nullable=False)

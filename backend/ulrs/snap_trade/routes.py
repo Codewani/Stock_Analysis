@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 from typing import Annotated, Any, Callable
 from pydantic import BaseModel
 
-from models.auth.user import UserSecret
-from models.snap_trade.user_holdings import *
-from ulrs.auth.user import get_db, get_current_user, UserInDB
-from utils.snap_trade import snaptrade
-from utils.redis_cache import *
-from models.snap_trade.account_balance_snapshot import AccountBalanceSnapshot, AccountBalanceSnapshotInDB
+from backend.models.auth.user import UserSecret
+from backend.models.snap_trade.user_holdings import *
+from backend.ulrs.auth.user import get_db, get_current_user, UserInDB
+from backend.utils.snap_trade import snaptrade
+from backend.utils.redis_cache import *
+from backend.models.snap_trade.account_balance_snapshot import AccountBalanceSnapshot, AccountBalanceSnapshotInDB
 import datetime
 
 router = APIRouter(prefix="/snap_trade", tags=["snap_trade"])
 
-
+ 
 class ConnectionRequest(BaseModel):
     broker: str
     custom_redirect: str | None = "https://snaptrade.com"
@@ -193,7 +193,7 @@ def update_holdings(
             user_secret=user_secret
         )
 
-        positions = response["positions"]
+        positions = response.body["positions"]
         for pos in positions:
             symbol = pos.get("symbol", {})
             symbol_info = symbol.get("symbol", {})
@@ -218,7 +218,7 @@ def update_holdings(
                 price=pos.get("price", 0.0)
             )
             holdings.append(new_holding)
-            total_balance += pos["total_value"]
+        total_balance += response.body["total_value"]["value"]
     
     for acct_id in account_ids:
         op(acct_id)

@@ -6,7 +6,7 @@ from typing import Any
 from dotenv import find_dotenv, load_dotenv
 from fastapi.testclient import TestClient
 
-from main import app
+from backend.main import app
 
 load_dotenv()
 

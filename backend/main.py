@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
-from models.auth.user import Base
-from ulrs.auth.user import router as auth_router
-from ulrs.snap_trade import router as snap_trade_router
-from database import engine
+import sys
+from pathlib import Path
+from backend.models.auth.user import Base
+from backend.ulrs.auth.user import router as auth_router
+from backend.ulrs.snap_trade import router as snap_trade_router
+from backend.database import engine
 
 load_dotenv()
 

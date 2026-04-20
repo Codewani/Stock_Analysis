@@ -1,15 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Annotated, Any, Callable
+from typing import Annotated
 from pydantic import BaseModel
 
-from backend.models.auth.user import UserSecret
 from backend.models.snap_trade.user_holdings import *
 from backend.ulrs.auth.user import get_db, get_current_user, UserInDB
 from backend.utils.snap_trade import snaptrade
 from backend.utils.redis_cache import *
 from backend.ulrs.utils.snap_trade.snap_trade_db import *
-import datetime
 
 
 router = APIRouter(prefix="/snap_trade/connections", tags=["snap_trade"])

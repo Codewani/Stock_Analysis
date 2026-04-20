@@ -1,7 +1,6 @@
 from datetime import datetime
 import uuid
 
-from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, String, DECIMAL, TIMESTAMP, func, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -22,7 +21,3 @@ class UserHolding(Base):
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     user = relationship("User", back_populates="user_holdings")
-
-    __table_args__ = (
-        UniqueConstraint('user_id', 'account_id', 'symbol', name='uq_user_holding'),
-    )

@@ -10,9 +10,10 @@ from datetime import timedelta
 from typing import Annotated
 from backend.ulrs.utils.db.db_utils import get_db
 from backend.ulrs.utils.auth.user import *
+from backend.ulrs.utils.auth.req_res_models import *
 
 @router.post("/register", response_model=UserResponse)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(user: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
     existing_user = db.query(User).filter(
         (User.email == user.email) | (User.user_id == user.user_id)
     ).first()
@@ -61,32 +62,34 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return UserResponse(user_id=new_user.user_id, message="User registered successfully")
 
 
-@router.get("/users/me")
-async def read_current_user(current_user: Annotated[UserInDB, Depends(get_current_user)]):
-    return {
-        "user_id": current_user.user_id,
-        "first_name": current_user.first_name,
-        "last_name": current_user.last_name,
-        "email": current_user.email,
-        "phone_number": current_user.phone_number,
-    }
+@router.get("/users/me", response_model=UserProfileResponse)
+async def read_current_user(
+    current_user: Annotated[UserInDB, Depends(get_current_user)]
+) -> UserProfileResponse:
+    return UserProfileResponse(
+        user_id=current_user.user_id,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        email=current_user.email,
+        phone_number=current_user.phone_number,
+    )
 
 
-@router.get("/users/{user_id}")
-def get_user_endpoint(user_id: str, db: Session = Depends(get_db)):
+@router.get("/users/{user_id}", response_model=UserProfileResponse)
+def get_user_endpoint(user_id: str, db: Session = Depends(get_db)) -> UserProfileResponse:
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {
-        "user_id": user.user_id,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "email": user.email,
-        "phone_number": user.phone_number
-    }
+    return UserProfileResponse(
+        user_id=user.user_id,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        phone_number=user.phone_number,
+    )
 
 
-@router.post("/login")
+@router.post("/login", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 db: Session = Depends(get_db)) -> Token:

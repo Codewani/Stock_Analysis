@@ -1,14 +1,11 @@
-import os
 import logging
 
 import redis
 
+from backend.ulrs.utils.caching.load_redis import redis_client
+
 
 logger = logging.getLogger(__name__)
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
-redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
 def get_account_ids_cache_key(user_id: str) -> str:
     return f"snaptrade:accounts:{user_id}"

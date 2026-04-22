@@ -1,17 +1,13 @@
-import os
 import logging
 
 import redis
 from pydantic import TypeAdapter
 
+from backend.ulrs.utils.caching.load_redis import redis_client
 from backend.ulrs.utils.watchlist.req_res_models import WatchlistEntry
 
 
 logger = logging.getLogger(__name__)
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
-redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 watchlist_adapter = TypeAdapter(list[WatchlistEntry])
 
 def get_watchlist_cache_key(user_id: str) -> str:

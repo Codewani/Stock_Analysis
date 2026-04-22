@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from backend.models.snap_trade.user_holdings import *
 from backend.ulrs.auth.user import get_db, get_current_user, UserInDB
 from backend.utils.snap_trade import snaptrade
-from backend.utils.redis_cache import *
-from backend.ulrs.utils.snap_trade.snap_trade_db import *
+from backend.ulrs.utils.caching.snap_trade.redis_cache import *
+from backend.ulrs.utils.snap_trade.snap_trade import *
 
 
 router = APIRouter(prefix="/snap_trade/connections", tags=["snap_trade"])

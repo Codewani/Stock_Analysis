@@ -1,25 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Annotated, Any, Callable
-from pydantic import BaseModel
+from typing import Annotated, Any
 
-from backend.models.auth.user import UserSecret
 from backend.models.snap_trade.user_holdings import *
 from backend.ulrs.auth.user import get_db, get_current_user, UserInDB
 from backend.utils.snap_trade import snaptrade
-from backend.utils.redis_cache import *
+from backend.ulrs.utils.caching.snap_trade.redis_cache import *
 from backend.models.snap_trade.account_balance_snapshot import AccountBalanceSnapshot, AccountBalanceSnapshotInDB
-from backend.ulrs.utils.snap_trade.snap_trade_db import *
+from backend.ulrs.utils.snap_trade.snap_trade import *
 import datetime
 
 
 router = APIRouter(prefix="/snap_trade/data", tags=["snap_trade"])
 
-@router.get("/accounts")
+@router.get("/accounts", response_model=list[dict[str, Any]])
 def list_user_accounts(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
-):
+) -> list[dict[str, Any]]:
     """
     List all user accounts for the authenticated user using SnapTrade.
     """
@@ -37,58 +35,11 @@ def list_user_accounts(
     return accounts
 
 
-def get_account_ids(current_user: UserInDB, db: Session) -> list[str]:
-    user_secret = get_snap_trade_secret(db, current_user.user_id)
-    response = snaptrade.account_information.list_user_accounts(
-        user_id=current_user.user_id,
-        user_secret=user_secret,
-    )
-    if response.status != 200:
-        raise HTTPException(status_code=response.status, detail=response.body)
-
-    accounts = response.body or []
-    account_ids = [acc["id"] for acc in accounts if "id" in acc]
-    cache_account_ids(current_user.user_id, account_ids)
-    return account_ids
-
-
-def calculate_total_balance(accounts: list[dict[str, Any]]) -> float:
-    total_balance = 0.0
-    for account in accounts:
-        if not isinstance(account, dict):
-            continue
-        balance = account.get("balance")
-        if not isinstance(balance, dict):
-            continue
-        total = balance.get("total")
-        if not isinstance(total, dict):
-            continue
-        amount = total.get("amount")
-        try:
-            total_balance += float(amount)
-        except (TypeError, ValueError):
-            continue
-    return total_balance
-
-
-
-# Helper to run operation for all accounts
-def for_each_account(
-    current_user: UserInDB,
-    db: Session,
-    operation_fn: Callable[[str], Any],
-) -> dict[str, Any]:
-    account_ids = get_account_ids(current_user, db)
-    results = {}
-    for account_id in account_ids:
-        results[account_id] = operation_fn(account_id)
-    return results
-
-@router.get("/accounts/activities")
+@router.get("/accounts/activities", response_model=dict[str, Any])
 def read_all_account_activities(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     def op(account_id):
         response = snaptrade.account_information.get_account_activities(
@@ -103,11 +54,11 @@ def read_all_account_activities(
 
 
 
-@router.get("/accounts/balances")
+@router.get("/accounts/balances", response_model=dict[str, Any])
 def read_all_account_balances(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     def op(account_id):
         response = snaptrade.account_information.get_user_account_balance(
@@ -123,11 +74,11 @@ def read_all_account_balances(
     return balances
 
 
-@router.post("/accounts/update")
+@router.post("/accounts/update", response_model=AccountBalanceSnapshotInDB)
 def update_holdings(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
-):
+) -> AccountBalanceSnapshotInDB:
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     account_ids = get_account_ids(current_user, db)
 
@@ -183,12 +134,12 @@ def update_holdings(
 
 
 
-@router.get("/accounts/orders")
+@router.get("/accounts/orders", response_model=dict[str, Any])
 def read_all_account_orders(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
     days: int = 365,
-):
+) -> dict[str, Any]:
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     def op(account_id):
         response = snaptrade.account_information.get_user_account_orders(
@@ -202,11 +153,11 @@ def read_all_account_orders(
         return response.body
     return for_each_account(current_user, db, op)
 
-@router.get("/accounts/balances/history")
+@router.get("/accounts/balances/history", response_model=list[AccountBalanceSnapshotInDB])
 def get_account_balance_history(
     current_user: Annotated[UserInDB, Depends(get_current_user)],
     db: Session = Depends(get_db),
-):
+) -> list[AccountBalanceSnapshotInDB]:
     snapshots = db.query(AccountBalanceSnapshot).filter(
         AccountBalanceSnapshot.user_id == current_user.user_id
     ).order_by(AccountBalanceSnapshot.snapshot_timestamp.desc()).all()

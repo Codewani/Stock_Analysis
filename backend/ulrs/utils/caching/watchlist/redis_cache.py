@@ -2,6 +2,9 @@ import os
 import logging
 
 import redis
+from pydantic import TypeAdapter
+
+from backend.ulrs.utils.watchlist.req_res_models import WatchlistEntry
 
 
 logger = logging.getLogger(__name__)
@@ -9,31 +12,34 @@ logger = logging.getLogger(__name__)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+watchlist_adapter = TypeAdapter(list[WatchlistEntry])
 
 def get_watchlist_cache_key(user_id: str) -> str:
-    return f"snaptrade:accounts:{user_id}"
+    return f"watchlist:{user_id}"
 
 
 def _handle_cache_error(action: str, user_id: str, exc: redis.RedisError) -> None:
     logger.warning("Redis unavailable during %s for user %s: %s", action, user_id, exc)
 
 
-def cache_watchlist(user_id: str, symbols: list[str]):
+def cache_watchlist(user_id: str, watchlist: list[WatchlistEntry]) -> None:
     key = get_watchlist_cache_key(user_id)
     try:
-        redis_client.delete(key)
-        if symbols:
-            redis_client.rpush(key, *symbols)
+        payload = watchlist_adapter.dump_json(watchlist).decode("utf-8")
+        redis_client.set(key, payload)
     except redis.RedisError as exc:
         _handle_cache_error("cache write", user_id, exc)
 
-def get_cached_watchlist(user_id: str) -> list[str]:
+def get_cached_watchlist(user_id: str) -> list[WatchlistEntry] | None:
     key = get_watchlist_cache_key(user_id)
     try:
-        return redis_client.lrange(key, 0, -1)
+        payload = redis_client.get(key)
+        if payload is None:
+            return None
+        return watchlist_adapter.validate_json(payload)
     except redis.RedisError as exc:
         _handle_cache_error("cache read", user_id, exc)
-        return []
+        return None
 
 def delete_cached_watchlist(user_id: str):
     key = get_watchlist_cache_key(user_id)

@@ -20,18 +20,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter()
 
-class UserCreate(BaseModel):
-    user_id: str
-    first_name: str
-    last_name: str
-    email: str
-    phone_number: str
-    password: str
-
-class UserResponse(BaseModel):
-    user_id: str
-    message: str
-
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-change-me")
 ALGORITHM = "HS256"

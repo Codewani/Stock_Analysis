@@ -1,7 +1,6 @@
 from kafka import KafkaConsumer
 import json
 
-# Initialize the consumer
 consumer = KafkaConsumer(
     'my-topic',
     bootstrap_servers='localhost:9092',
@@ -11,10 +10,12 @@ consumer = KafkaConsumer(
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))
 )
 
-print("Listening for messages...")
+
+def send_push_notification(news_event):
+    '''
+    TODO: implement push notifications after ai evaluation
+    '''
+    pass
 
 for message in consumer:
-    print(f"Received | Topic: {message.topic} | "
-          f"Partition: {message.partition} | "
-          f"Offset: {message.offset} | "
-          f"Value: {message.value}")
+    send_push_notification(message)

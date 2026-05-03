@@ -15,22 +15,6 @@ producer = KafkaProducer(
 
 load_dotenv()
 
-'''
-alpaca news api response object:
-{
-    "T": "n",
-    "id": 24918784,
-    "headline": "Corsair Reports Purchase Of Majority Ownership In iDisplay, No Terms Disclosed",
-    "summary": "Corsair Gaming, Inc. (NASDAQ:CRSR) (“Corsair”), a leading global provider and innovator of high-performance gear for gamers and content creators, today announced that it acquired a 51% stake in iDisplay",
-    "author": "Benzinga Newsdesk",
-    "created_at": "2022-01-05T22:00:37Z",
-    "updated_at": "2022-01-05T22:00:38Z",
-    "url": "https://www.benzinga.com/m-a/22/01/24918784/corsair-reports-purchase-of-majority-ownership-in-idisplay-no-terms-disclosed",
-    "content": "\u003cp\u003eCorsair Gaming, Inc. (NASDAQ:\u003ca class=\"ticker\" href=\"https://www.benzinga.com/stock/CRSR#NASDAQ\"\u003eCRSR\u003c/a\u003e) (\u0026ldquo;Corsair\u0026rdquo;), a leading global ...",
-    "symbols": ["CRSR"],
-    "source": "benzinga"
-}
-'''
 
 def on_open(ws):
     print("opened")
@@ -55,6 +39,7 @@ def on_message(ws, message):
     '''
     handle incoming messages from the websocket
     '''
+    print(message)
     producer.send('my-topic', value=message)
 
 def on_error(ws, error):

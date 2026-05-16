@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+import uuid
+
+from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, declarative_base
 from pydantic import BaseModel
 
@@ -6,7 +9,8 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
-    user_id = Column(String, primary_key=True)
+    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    snaptrade_user_id = Column(String, unique=True, nullable=False)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
@@ -20,20 +24,21 @@ class User(Base):
 
 class Credential(Base):
     __tablename__ = "credentials"
-    user_id = Column(String, ForeignKey("users.user_id"), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), primary_key=True)
     password_hash = Column(String, nullable=False)
 
     user = relationship("User", back_populates="credentials")
 
 class UserSecret(Base):
     __tablename__ = "user_secrets"
-    user_id = Column(String, ForeignKey("users.user_id"), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), primary_key=True)
     snap_trade_secret = Column(String, nullable=False)
 
     user = relationship("User", back_populates="user_secrets")
 
 class UserInDB(BaseModel):
-    user_id: str
+    user_id: uuid.UUID
+    snaptrade_user_id: str
     first_name: str
     last_name: str
     email: str

@@ -6,13 +6,13 @@ from sqlalchemy import Column, String, DECIMAL, TIMESTAMP, func, ForeignKey, Uni
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from models.auth.user import Base
+from backend.models.auth.user import Base
 
 class AccountBalanceSnapshot(Base):
     __tablename__ = "account_balance_snapshots"
 
     snapshot_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(String(255), ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
     total_balance = Column(DECIMAL(18, 2), nullable=False)
     snapshot_timestamp = Column(TIMESTAMP, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
@@ -25,7 +25,7 @@ class AccountBalanceSnapshot(Base):
 
 class AccountBalanceSnapshotInDB(BaseModel):
     snapshot_id: uuid.UUID
-    user_id: str
+    user_id: uuid.UUID
     total_balance: float
     snapshot_timestamp: datetime
     created_at: datetime | None = None

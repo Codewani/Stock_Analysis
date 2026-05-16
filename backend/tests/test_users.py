@@ -1,11 +1,12 @@
 import os
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from main import app
-from backend.models.auth import Base
-from backend.ulrs.auth.user import get_db
+from backend.main import app
+from backend.db.base import Base
+from backend.db.session import get_db
 
 # Set testing environment
 os.environ["TESTING"] = "1"
@@ -52,7 +53,7 @@ def test_register_user_success(client):
     data = response.json()
     assert "user_id" in data
     assert data["message"] == "User registered successfully"
-    assert isinstance(data["user_id"], int)
+    assert str(uuid.UUID(data["user_id"])) == data["user_id"]
 
 def test_register_user_duplicate_email(client):
     # First register a user

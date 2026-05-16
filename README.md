@@ -48,7 +48,7 @@ backend/
   main.py                      FastAPI entrypoint
   database.py                  SQLAlchemy engine and session factory
   models/                      Database models
-  ulrs/
+  routers/
     auth/                      Registration, login, user profile APIs
     snap_trade/                SnapTrade connection and account data APIs
     watchlist/                 Watchlist APIs
@@ -179,7 +179,7 @@ uvicorn backend.main:app --reload
 ### 4. Run the news stream producer
 
 ```bash
-python backend/ulrs/data_streaming/stream.py
+python backend/services/data_streaming/stream.py
 ```
 
 ### 5. Run notification consumers
@@ -187,19 +187,19 @@ python backend/ulrs/data_streaming/stream.py
 Email:
 
 ```bash
-python backend/ulrs/data_streaming/emails.py
+python backend/services/data_streaming/emails.py
 ```
 
 SMS:
 
 ```bash
-python backend/ulrs/data_streaming/sms.py
+python backend/services/data_streaming/sms.py
 ```
 
 Push:
 
 ```bash
-python backend/ulrs/data_streaming/push_notifications.py
+python backend/services/data_streaming/push_notifications.py
 ```
 
 ## Frontend

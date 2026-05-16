@@ -23,7 +23,7 @@ def list_user_accounts(
     """
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     response = snaptrade.account_information.list_user_accounts(
-        user_id=current_user.user_id,
+        user_id=current_user.snaptrade_user_id,
         user_secret=user_secret,
     )
     if response.status != 200:
@@ -44,7 +44,7 @@ def read_all_account_activities(
     def op(account_id):
         response = snaptrade.account_information.get_account_activities(
             account_id=account_id,
-            user_id=current_user.user_id,
+            user_id=current_user.snaptrade_user_id,
             user_secret=user_secret,
         )
         if response.status != 200:
@@ -63,7 +63,7 @@ def read_all_account_balances(
     def op(account_id):
         response = snaptrade.account_information.get_user_account_balance(
             account_id=account_id,
-            user_id=current_user.user_id,
+            user_id=current_user.snaptrade_user_id,
             user_secret=user_secret,
         )
         if response.status != 200:
@@ -88,7 +88,7 @@ def update_holdings(
         nonlocal total_balance
         response = snaptrade.account_information.get_user_holdings(
             account_id=account_id,
-            user_id=current_user.user_id,
+            user_id=current_user.snaptrade_user_id,
             user_secret=user_secret
         )
 
@@ -144,7 +144,7 @@ def read_all_account_orders(
     def op(account_id):
         response = snaptrade.account_information.get_user_account_orders(
             account_id=account_id,
-            user_id=current_user.user_id,
+            user_id=current_user.snaptrade_user_id,
             user_secret=user_secret,
             days=days,
         )

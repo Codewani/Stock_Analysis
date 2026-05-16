@@ -12,13 +12,13 @@ class WatchlistItem(BaseModel):
     symbol: str
 
 class WatchlistResponse(BaseModel):
-    user_id: str
+    user_id: UUID
     message: str
 
 
 class WatchlistEntry(BaseModel):
     watchlist_item_id: UUID
-    user_id: str
+    user_id: UUID
     symbol: str
     created_at: datetime | None = None
 

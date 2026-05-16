@@ -23,7 +23,7 @@ def get_account_ids(current_user: UserInDB, db: Session) -> list[str]:
     if cached_account_ids:
         return cached_account_ids
     response = snaptrade.account_information.list_user_accounts(
-        user_id=current_user.user_id,
+        user_id=current_user.snaptrade_user_id,
         user_secret=user_secret,
     )
     if response.status != 200:

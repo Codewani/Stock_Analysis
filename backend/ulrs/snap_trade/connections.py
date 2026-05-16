@@ -31,7 +31,7 @@ def create_connection(
 ):
     user_secret = get_snap_trade_secret(db, current_user.user_id)
     response = snaptrade.authentication.login_snap_trade_user(
-        user_id=current_user.user_id,
+        user_id=current_user.snaptrade_user_id,
         user_secret=user_secret,
         broker=connection.broker,
         immediate_redirect=connection.immediate_redirect,

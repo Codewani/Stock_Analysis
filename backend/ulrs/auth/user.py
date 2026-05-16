@@ -1,4 +1,6 @@
+import hashlib
 import os
+import uuid
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -12,19 +14,29 @@ from backend.ulrs.utils.db.db_utils import get_db
 from backend.ulrs.utils.auth.user import *
 from backend.ulrs.utils.auth.req_res_models import *
 
+
+def generate_snaptrade_user_id(email: str) -> str:
+    normalized_email = email.strip().lower()
+    return hashlib.sha256(normalized_email.encode("utf-8")).hexdigest()
+
+
+def generate_user_id() -> uuid.UUID:
+    return uuid.uuid4()
+
 @router.post("/register", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
     existing_user = db.query(User).filter(
-        (User.email == user.email) | (User.user_id == user.user_id)
+        ((User.email == user.email) | (User.phone_number == user.phone_number))
     ).first()
     if existing_user:
         if existing_user.email == user.email:
             raise HTTPException(status_code=400, detail="Email already registered")
-        raise HTTPException(status_code=400, detail="User ID already registered")
+        raise HTTPException(status_code=400, detail="Phone number already registered")
 
-    snap_trade_response = snaptrade.authentication.register_snap_trade_user(
-        user_id=user.user_id
-    )
+    user_id = generate_user_id()
+    snaptrade_user_id = generate_snaptrade_user_id(user.email)
+
+    snap_trade_response = snaptrade.authentication.register_snap_trade_user(user_id=snaptrade_user_id)
     
     if snap_trade_response.status != 200:
         raise HTTPException(status_code=400, detail="Failed to register with SnapTrade")
@@ -33,7 +45,8 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)) -> UserRespon
 
     # Create new user
     new_user = User(
-        user_id=user.user_id,
+        user_id=user_id,
+        snaptrade_user_id=snaptrade_user_id,
         first_name=user.first_name,
         last_name=user.last_name,
         email=user.email,
@@ -77,7 +90,12 @@ async def read_current_user(
 
 @router.get("/users/{user_id}", response_model=UserProfileResponse)
 def get_user_endpoint(user_id: str, db: Session = Depends(get_db)) -> UserProfileResponse:
-    user = db.query(User).filter(User.user_id == user_id).first()
+    try:
+        parsed_user_id = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user = db.query(User).filter(User.user_id == parsed_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return UserProfileResponse(
@@ -102,7 +120,7 @@ db: Session = Depends(get_db)) -> Token:
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.user_id}, expires_delta=access_token_expires
+        data={"sub": str(user.user_id)}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 

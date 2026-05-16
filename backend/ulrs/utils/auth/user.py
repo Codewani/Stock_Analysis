@@ -1,6 +1,8 @@
 import os
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from pydantic import BaseModel
@@ -35,15 +37,20 @@ def get_password_hash(password):
 
 def get_user(db: Session, user_identifier: str):
     """Get user by user_id or email, joined with credentials."""
-    user = db.query(User).filter(
-        (User.user_id == user_identifier) | (User.email == user_identifier)
-    ).first()
+    user_filters = [User.email == user_identifier]
+    try:
+        user_filters.append(User.user_id == uuid.UUID(user_identifier))
+    except (TypeError, ValueError, AttributeError):
+        pass
+
+    user = db.query(User).filter(or_(*user_filters)).first()
     
     if user:
         credential = db.query(Credential).filter(Credential.user_id == user.user_id).first()
         if credential:
             user_in_db = UserInDB(
                 user_id=user.user_id,
+                snaptrade_user_id=user.snaptrade_user_id,
                 first_name=user.first_name,
                 last_name=user.last_name,
                 email=user.email,

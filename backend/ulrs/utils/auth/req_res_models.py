@@ -1,7 +1,8 @@
+import uuid
+
 from pydantic import BaseModel
 
 class UserCreate(BaseModel):
-    user_id: str
     first_name: str
     last_name: str
     email: str
@@ -9,12 +10,12 @@ class UserCreate(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    user_id: str
+    user_id: uuid.UUID
     message: str
 
 
 class UserProfileResponse(BaseModel):
-    user_id: str
+    user_id: uuid.UUID
     first_name: str
     last_name: str
     email: str

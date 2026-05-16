@@ -46,14 +46,14 @@ FastAPI Backend
 ```text
 backend/
   main.py                      FastAPI entrypoint
-  database.py                  SQLAlchemy engine and session factory
-  models/                      Database models
-  routers/
-    auth/                      Registration, login, user profile APIs
-    snap_trade/                SnapTrade connection and account data APIs
-    watchlist/                 Watchlist APIs
-    data_streaming/            Kafka consumers and market news stream
-    utils/                     Auth, caching, DB, and helper utilities
+  api/v1/                      Route composition and endpoint modules
+  core/                        Security and core application helpers
+  crud/                        Data-access helpers
+  db/                          Base metadata and session management
+  database.py                  Backward-compatible database shim
+  models/                      SQLAlchemy models
+  schemas/                     Pydantic request and response models
+  services/                    SnapTrade, Redis, watchlist, and Kafka workers
   tests/                       Backend tests
   snap_trade_tests/            Manual/integration-style SnapTrade scripts
 
@@ -95,7 +95,7 @@ frontend/
 
 ## API Surface
 
-Current routers are mounted in the backend app entrypoint:
+Current routes are composed in `backend.api.v1.api` and mounted by the FastAPI app:
 
 - `POST /register`
 - `POST /login`
@@ -128,7 +128,7 @@ Current routers are mounted in the backend app entrypoint:
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory with the values your setup needs.
+Create a `.env` file at the repository root with the values your setup needs. The repository already ignores `.env` and `__pycache__/` so local secrets and Python bytecode caches stay out of Git.
 
 ```env
 POSTGRESURL=postgresql://...
@@ -155,8 +155,8 @@ EMAIL_FROM=alerts@your-domain.com
 
 ```bash
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -200,6 +200,21 @@ Push:
 
 ```bash
 python backend/services/data_streaming/push_notifications.py
+```
+
+## Repository Hygiene
+
+Python cache directories are intentionally ignored by Git:
+
+```text
+**/__pycache__/
+```
+
+If a cache file was already committed before the ignore rule existed, remove it from the Git index without deleting the local file:
+
+```bash
+git rm --cached path/to/file.pyc
+git rm --cached -r path/to/__pycache__
 ```
 
 ## Frontend

@@ -8,7 +8,7 @@ from backend.core.security import get_current_user
 from backend.db.session import get_db
 from backend.models.auth.user import UserInDB
 from backend.models.snap_trade.account_balance_snapshot import AccountBalanceSnapshot, AccountBalanceSnapshotInDB
-from backend.models.snap_trade.user_holdings import UserHolding
+from backend.models.snap_trade.user_holdings import UserHolding, UserHoldingInDB
 from backend.services.snap_trade import (
 	cache_account_ids,
 	for_each_account,
@@ -89,9 +89,10 @@ def update_holdings(
 
 	holdings = []
 	total_balance = 0
-
+	holdings_value = 0
 	def op(account_id):
 		nonlocal total_balance
+		nonlocal holdings_value
 		response = snaptrade.account_information.get_user_holdings(
 			account_id=account_id,
 			user_id=current_user.snaptrade_user_id,
@@ -103,6 +104,10 @@ def update_holdings(
 			symbol = pos.get("symbol", {})
 			symbol_info = symbol.get("symbol", {})
 			symbol_name = symbol_info.get("symbol")
+			units=pos.get("units", 0)
+			average_purchase_price=pos.get("average_purchase_price", 0.0)
+			open_pnl=pos.get("open_pnl", 0.0)
+			price=pos.get("price", 0.0)
 			if not symbol_name:
 				continue
 
@@ -115,12 +120,13 @@ def update_holdings(
 					user_id=current_user.user_id,
 					account_id=account_id,
 					symbol=symbol_name,
-					units=pos.get("units", 0),
-					average_purchase_price=pos.get("average_purchase_price", 0.0),
-					open_pnl=pos.get("open_pnl", 0.0),
-					price=pos.get("price", 0.0),
+					units=units,
+					average_purchase_price=average_purchase_price,
+					open_pnl=open_pnl,
+					price=price,
 				)
 			)
+			holdings_value += (price * units)
 		total_balance += response.body["total_value"]["value"]
 
 	for acct_id in account_ids:
@@ -130,6 +136,7 @@ def update_holdings(
 		user_id=current_user.user_id,
 		total_balance=total_balance,
 		snapshot_timestamp=datetime.datetime.utcnow(),
+		buying_power=total_balance - holdings_value
 	)
 	holdings.append(snapshot)
 	db.add_all(holdings)
@@ -168,3 +175,14 @@ def get_account_balance_history(
 		AccountBalanceSnapshot.user_id == current_user.user_id
 	).order_by(AccountBalanceSnapshot.snapshot_timestamp.desc()).all()
 	return [AccountBalanceSnapshotInDB.model_validate(snapshot) for snapshot in snapshots]
+
+
+@router.get("/accounts/holdings", response_model=list[UserHoldingInDB])
+def get_account_holdings(
+	current_user: Annotated[UserInDB, Depends(get_current_user)],
+	db: Session = Depends(get_db),
+) -> list[UserHoldingInDB]:
+	holdings = db.query(UserHolding).filter(
+		UserHolding.user_id == current_user.user_id
+	).order_by(UserHolding.symbol.asc(), UserHolding.created_at.desc()).all()
+	return [UserHoldingInDB.model_validate(holding) for holding in holdings]

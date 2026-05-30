@@ -1,6 +1,7 @@
 from datetime import datetime
 import uuid
 
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, String, DECIMAL, TIMESTAMP, func, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -21,3 +22,17 @@ class UserHolding(Base):
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     user = relationship("User", back_populates="user_holdings")
+
+
+class UserHoldingInDB(BaseModel):
+    holding_id: uuid.UUID
+    user_id: uuid.UUID
+    account_id: str
+    average_purchase_price: float
+    symbol: str
+    units: float
+    open_pnl: float
+    price: float
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)

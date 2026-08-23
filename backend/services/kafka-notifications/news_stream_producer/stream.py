@@ -8,6 +8,9 @@ import json
 from openai import OpenAI
 
 NOTIFICATIONS_TOPIC = 'notifications'
+ALPACA_NEWS_STREAM_URL = "wss://stream.data.alpaca.markets/v1beta1/news"
+FAKE_NEWS_STREAM_URL = "ws://localhost:8765"
+USE_FAKE_NEWS_STREAM = os.getenv("USE_FAKE_NEWS_STREAM", "true").lower() == "true"
 
 producer = KafkaProducer(
     bootstrap_servers='localhost:9092',
@@ -18,7 +21,10 @@ load_dotenv()
 ai_client = OpenAI()
 
 def on_open(ws):
-    print("opened")
+    if USE_FAKE_NEWS_STREAM:
+        ws.send(json.dumps({"action": "auth", "key": "fake", "secret": "fake"}))
+        return
+
     key = os.getenv("ALPACA_API_KEY")
     secret = os.getenv("ALPACA_CLIENT_SECRET")
 
@@ -53,38 +59,39 @@ def on_message(ws, message):
             "source": "benzinga"
         }
     '''
+    message = json.loads(message)[0]
     ai_response = ai_client.chat.completions.create(
-    model="gpt-4o-mini",
-    response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "name": "sentiment_analysis",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "sentiment": {
-                        "type": "string",
-                        "enum": ["positive", "negative", "neutral"]
-                    }
+        model="gpt-4o-mini",
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "sentiment_analysis",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "sentiment": {
+                            "type": "string",
+                            "enum": ["positive", "negative", "neutral"]
+                        }
+                    },
+                    "required": ["sentiment"],
+                    "additionalProperties": False
+                }
+            }
+        },
+        messages=[
+                {
+                "role": "system",
+                "content": (
+                    "You are a financial news sentiment classifier."
+                    )
                 },
-                "required": ["sentiment"],
-                "additionalProperties": False
-            }
-        }
-    },
-    messages=[
-            {
-            "role": "system",
-            "content": (
-                "You are a financial news sentiment classifier."
-                )
-            },
-            {
-            "role": "user",
-            "content": message["summary"]
-            }
-        ],
-        temperature=0
+                {
+                "role": "user",
+                "content": message["summary"]
+                }
+            ],
+            temperature=0
     )
     news_event = {
         "headline": message["headline"],
@@ -93,6 +100,7 @@ def on_message(ws, message):
         "symbols": message["symbols"],
         "sentiment": json.loads(ai_response.choices[0].message.content)["sentiment"]
     }
+    print(f"news_event: {news_event}")
     producer.send(NOTIFICATIONS_TOPIC, value=news_event)
 
 def on_error(ws, error):
@@ -105,7 +113,7 @@ def on_close(ws, close_status_code, close_msg):
     '''
 
 
-socket = "wss://stream.data.alpaca.markets/v1beta1/news"
+socket = FAKE_NEWS_STREAM_URL if USE_FAKE_NEWS_STREAM else ALPACA_NEWS_STREAM_URL
 ws = websocket.WebSocketApp(
     socket,
     on_open=on_open,

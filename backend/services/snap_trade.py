@@ -11,11 +11,12 @@ from backend.services.snap_trade_cache import cache_account_ids, get_cached_acco
 
 load_dotenv()
 
+
 snaptrade = SnapTrade(
-    auth=SnapTradeAuth.personal_api_key(
-        consumer_key="CONSUMER_KEY",
-        client_id="CLIENT_ID",
-    ),
+    auth=SnapTradeAuth.commercial_api_key(
+        consumer_key=os.getenv("Secret"),
+        client_id=os.getenv("Client_Id"),
+    )
 )
 
 

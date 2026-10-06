@@ -14,6 +14,7 @@ class AccountBalanceSnapshot(Base):
     snapshot_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
     total_balance = Column(DECIMAL(18, 2), nullable=False)
+    buying_power = Column(DECIMAL(18, 2), nullable=False)
     snapshot_timestamp = Column(TIMESTAMP, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
 
@@ -29,5 +30,6 @@ class AccountBalanceSnapshotInDB(BaseModel):
     total_balance: float
     snapshot_timestamp: datetime
     created_at: datetime | None = None
+    buying_power: float
 
     model_config = ConfigDict(from_attributes=True)

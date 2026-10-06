@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
-from snaptrade_client import SnapTrade
+from snaptrade_client import SnapTrade, SnapTradeAuth
 from sqlalchemy.orm import Session
 
 from backend.models.auth.user import UserSecret, UserInDB
@@ -12,8 +12,10 @@ from backend.services.snap_trade_cache import cache_account_ids, get_cached_acco
 load_dotenv()
 
 snaptrade = SnapTrade(
-	client_id=os.getenv("Client_Id"),
-	consumer_key=os.getenv("Secret"),
+    auth=SnapTradeAuth.personal_api_key(
+        consumer_key="CONSUMER_KEY",
+        client_id="CLIENT_ID",
+    ),
 )
 
 

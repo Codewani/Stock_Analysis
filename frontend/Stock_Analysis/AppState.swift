@@ -162,7 +162,7 @@ final class AppState: ObservableObject {
 
             while !Task.isCancelled {
                 do {
-                    try await Task.sleep(for: .seconds(120))
+                    try await Task.sleep(for: .seconds(600))
                 } catch {
                     break
                 }

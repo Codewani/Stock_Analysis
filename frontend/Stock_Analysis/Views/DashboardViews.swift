@@ -33,7 +33,7 @@ struct DashboardView: View {
             .screenBackground()
             .navigationTitle("Dashboard")
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .compatibleTrailing) {
                     NavigationLink {
                         NotificationCenterView()
                     } label: {
@@ -129,10 +129,6 @@ struct DashboardView: View {
     }
 }
 
-/// Portfolio value card with a scrubbable chart: press and drag across it to
-/// inspect the balance at any point in time, Robinhood-style. The headline
-/// value and trend pill track whatever point is currently selected, and
-/// revert to the latest balance once you lift your finger.
 struct PortfolioHeroCard: View {
     let summary: PortfolioSummary
     let snapshots: [PortfolioSnapshot]
@@ -285,7 +281,7 @@ struct HoldingsListView: View {
         }
         .screenBackground()
         .navigationTitle("Holdings")
-        .navigationBarTitleDisplayMode(.inline)
+        .compatibleInlineNavigationTitle()
     }
 }
 
@@ -310,7 +306,7 @@ struct StockDetailView: View {
         }
         .screenBackground()
         .navigationTitle(holding.symbol)
-        .navigationBarTitleDisplayMode(.inline)
+        .compatibleInlineNavigationTitle()
         .onAppear {
             guard relatedNews.isEmpty else { return }
             relatedNews = appState.portfolioService.stockDetail(for: holding).relatedNews
@@ -448,7 +444,7 @@ struct NotificationCenterView: View {
         }
         .screenBackground()
         .navigationTitle("Notifications")
-        .navigationBarTitleDisplayMode(.inline)
+        .compatibleInlineNavigationTitle()
     }
 
     private func notificationRow(_ item: AppNotification) -> some View {

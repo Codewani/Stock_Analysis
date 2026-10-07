@@ -471,7 +471,7 @@ struct SettingsView: View {
         }
         .screenBackground()
         .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
+        .compatibleInlineNavigationTitle()
     }
 
     private var appearanceCard: some View {

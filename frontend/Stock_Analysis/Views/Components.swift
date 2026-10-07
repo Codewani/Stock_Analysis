@@ -48,6 +48,15 @@ extension View {
     }
 
     @ViewBuilder
+    func compatibleInlineNavigationTitle() -> some View {
+#if os(iOS)
+        navigationBarTitleDisplayMode(.inline)
+#else
+        self
+#endif
+    }
+
+    @ViewBuilder
     func compatibleTextInputAutocapitalizationNever() -> some View {
 #if os(iOS)
         textInputAutocapitalization(.never)
@@ -64,6 +73,18 @@ extension View {
             .autocorrectionDisabled()
 #else
         self
+#endif
+    }
+}
+
+extension ToolbarItemPlacement {
+    /// A trailing toolbar placement that's valid on every platform this app
+    /// targets — `.topBarTrailing` doesn't exist outside iOS/iPadOS.
+    static var compatibleTrailing: ToolbarItemPlacement {
+#if os(iOS)
+        .topBarTrailing
+#else
+        .primaryAction
 #endif
     }
 }
@@ -399,9 +420,9 @@ struct Sparkline: View {
 // MARK: - Interactive (scrubbable) chart
 
 /// An area/line chart you can press and drag across to inspect the value at
-/// a point in time, Robinhood-style: touching the chart snaps a marker to the
-/// nearest data point and reports it via `selection`; lifting the finger
-/// clears the selection so the caller can fall back to showing the latest value.
+/// a point in time: touching the chart snaps a marker to the nearest data
+/// point and reports it via `selection`; lifting the finger clears the
+/// selection so the caller can fall back to showing the latest value.
 struct InteractiveAreaChart: View {
     let points: [PricePoint]
     let color: Color

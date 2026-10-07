@@ -9,6 +9,8 @@ from backend.db.session import get_db
 from backend.models.auth.user import UserInDB
 from backend.models.snap_trade.account_balance_snapshot import AccountBalanceSnapshot, AccountBalanceSnapshotInDB
 from backend.models.snap_trade.user_holdings import UserHolding, UserHoldingInDB
+from backend.services.concerned_users import get_held_symbols, handle_holdings_changed
+from backend.services.holdings import delete_cached_holdings, get_user_holdings
 from backend.services.snap_trade import (
 	cache_account_ids,
 	for_each_account,
@@ -86,6 +88,7 @@ def update_holdings(
 ) -> AccountBalanceSnapshotInDB:
 	user_secret = get_snap_trade_secret(db, current_user.user_id)
 	account_ids = get_account_ids(current_user, db)
+	previous_symbols = get_held_symbols(current_user.user_id, db)
 
 	holdings = []
 	total_balance = 0
@@ -100,6 +103,11 @@ def update_holdings(
 		)
 
 		positions = response.body["positions"]
+		# Clear the account even when it has no positions left, or sold-off holdings would linger.
+		db.query(UserHolding).filter(
+			UserHolding.user_id == current_user.user_id,
+			UserHolding.account_id == account_id,
+		).delete()
 		for pos in positions:
 			symbol = pos.get("symbol", {})
 			symbol_info = symbol.get("symbol", {})
@@ -111,10 +119,6 @@ def update_holdings(
 			if not symbol_name:
 				continue
 
-			db.query(UserHolding).filter(
-				UserHolding.user_id == current_user.user_id,
-				UserHolding.account_id == account_id,
-			).delete()
 			holdings.append(
 				UserHolding(
 					user_id=current_user.user_id,
@@ -141,6 +145,8 @@ def update_holdings(
 	holdings.append(snapshot)
 	db.add_all(holdings)
 	db.commit()
+	delete_cached_holdings(current_user.user_id)
+	handle_holdings_changed(current_user.user_id, previous_symbols, db)
 	return AccountBalanceSnapshotInDB.model_validate(snapshot)
 
 
@@ -182,7 +188,4 @@ def get_account_holdings(
 	current_user: Annotated[UserInDB, Depends(get_current_user)],
 	db: Session = Depends(get_db),
 ) -> list[UserHoldingInDB]:
-	holdings = db.query(UserHolding).filter(
-		UserHolding.user_id == current_user.user_id
-	).order_by(UserHolding.symbol.asc(), UserHolding.created_at.desc()).all()
-	return [UserHoldingInDB.model_validate(holding) for holding in holdings]
+	return get_user_holdings(current_user.user_id, db)

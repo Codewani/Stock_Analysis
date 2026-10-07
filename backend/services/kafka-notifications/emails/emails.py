@@ -59,5 +59,6 @@ def send_email_notification(news_event):
 
 
 for message in consumer:
-	send_email_notification(message.value)
-	consumer.commit()
+	if 'test' not in message.value:
+		send_email_notification(message.value)
+		consumer.commit()

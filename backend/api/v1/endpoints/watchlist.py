@@ -8,6 +8,7 @@ from backend.db.session import get_db
 from backend.models.auth.user import UserInDB
 from backend.models.watchlist.watchlist import WatchList
 from backend.schemas.watchlist import WatchlistEntry, WatchlistItem, WatchlistResponse
+from backend.services.concerned_users import handle_symbol_added, handle_symbol_removed
 from backend.services.watchlist import delete_cached_watchlist, get_user_watchlist
 
 
@@ -41,6 +42,7 @@ def add_to_watchlist(
 
 	db.refresh(new_watchlist_item)
 	delete_cached_watchlist(user_id=current_user.user_id)
+	handle_symbol_added(current_user.user_id, watchlist_item.symbol)
 	return WatchlistResponse(
 		user_id=current_user.user_id,
 		message=f"{watchlist_item.symbol} has successfully been added to your watchlist",
@@ -67,6 +69,7 @@ def remove_from_watchlist(
 	db.delete(item)
 	db.commit()
 	delete_cached_watchlist(user_id=current_user.user_id)
+	handle_symbol_removed(current_user.user_id, watchlist_item.symbol, db)
 	return WatchlistResponse(
 		user_id=current_user.user_id,
 		message=f"{watchlist_item.symbol} has successfully been removed from your watchlist",

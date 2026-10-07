@@ -100,7 +100,6 @@ def on_message(ws, message):
         "symbols": message["symbols"],
         "sentiment": json.loads(ai_response.choices[0].message.content)["sentiment"]
     }
-    print(f"news_event: {news_event}")
     producer.send(NOTIFICATIONS_TOPIC, value=news_event)
 
 def on_error(ws, error):

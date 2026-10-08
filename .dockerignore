@@ -1,0 +1,15 @@
+*
+!backend
+
+**/.env
+**/.env.*
+backend/supabase.py
+backend/auth_simulation.py
+backend/sdk_tests
+backend/snap_trade_tests
+backend/tests
+backend/venv
+**/__pycache__
+**/.DS_Store
+**/*.db
+**/*.rdb

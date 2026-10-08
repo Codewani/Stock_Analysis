@@ -11,6 +11,7 @@ from passlib.context import CryptContext
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from backend.core.config import settings
 from backend.db.session import get_db
 from backend.models.auth.token import TokenData
 from backend.models.auth.user import Credential, User, UserInDB
@@ -19,7 +20,9 @@ from backend.models.auth.user import Credential, User, UserInDB
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 router = APIRouter()
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-change-me")
+if not settings.secret_key:
+    raise RuntimeError("SECRET_KEY is not set. Add it to .env.")
+SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 

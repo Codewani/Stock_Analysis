@@ -11,11 +11,12 @@ load_dotenv()
 resend.api_key = os.environ["RESEND_API_KEY"]
 
 NOTIFICATIONS_TOPIC = 'notifications'
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 
 
 consumer = KafkaConsumer(
 	NOTIFICATIONS_TOPIC,
-	bootstrap_servers='localhost:9092',
+	bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
 	auto_offset_reset='earliest',
 	enable_auto_commit=False,
 	group_id='email_notifications',

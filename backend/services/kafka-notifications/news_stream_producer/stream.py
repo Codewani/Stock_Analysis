@@ -8,12 +8,13 @@ import json
 from openai import OpenAI
 
 NOTIFICATIONS_TOPIC = 'notifications'
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 ALPACA_NEWS_STREAM_URL = "wss://stream.data.alpaca.markets/v1beta1/news"
-FAKE_NEWS_STREAM_URL = "ws://localhost:8765"
+FAKE_NEWS_STREAM_URL = os.getenv("FAKE_NEWS_STREAM_URL", "ws://localhost:8765")
 USE_FAKE_NEWS_STREAM = os.getenv("USE_FAKE_NEWS_STREAM", "true").lower() == "true"
 
 producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',
+    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 

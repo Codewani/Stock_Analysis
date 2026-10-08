@@ -16,3 +16,5 @@ openai==1.79.0
 resend==2.30.1
 snaptrade-python-sdk==13.0.31
 python-multipart==0.0.32
+finnhub-python==2.4.29
+kafka-python-ng==2.2.3

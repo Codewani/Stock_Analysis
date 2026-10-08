@@ -9,7 +9,7 @@ load_dotenv()
 @dataclass(frozen=True)
 class Settings:
     postgres_url: str | None = os.getenv("POSTGRESURL")
-    secret_key: str = os.getenv("SECRET_KEY", "development-secret-change-me")
+    secret_key: str | None = os.getenv("SECRET_KEY")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     snaptrade_client_id: str | None = os.getenv("Client_Id")
     snaptrade_consumer_key: str | None = os.getenv("Secret")

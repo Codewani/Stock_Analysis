@@ -1,11 +1,12 @@
 import asyncio
 import json
+import os
 import random
 from datetime import datetime, timezone
 
 import websockets
 
-HOST = "localhost"
+HOST = os.getenv("FAKE_NEWS_HOST", "localhost")
 PORT = 8765
 
 FAKE_HEADLINES = [
